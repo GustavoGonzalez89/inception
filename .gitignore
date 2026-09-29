@@ -1,0 +1,8 @@
+# Secrets — jamais commités
+secrets/
+srcs/.env
+
+# Divers
+*.log
+.vscode/
+.DS_Store

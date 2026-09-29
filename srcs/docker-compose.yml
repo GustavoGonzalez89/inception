@@ -1,0 +1,102 @@
+
+#================================
+# 1. services
+#================================
+
+services:
+  nginx:
+    image: nginx
+    build:  ./requirements/nginx
+    container_name: nginx
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_data:/var/www/wordpress:ro
+    depends_on:
+      - mariadb
+      - wordpress
+    networks:
+      - inception
+    restart:  always
+
+  mariadb:
+    image: mariadb
+    build:  ./requirements/mariadb
+    container_name: mariadb
+    init: true
+    env_file:
+      - .env
+    #ports:
+    #  - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inception
+    restart:  always
+    secrets:
+      - mariadb_root_password
+      - mariadb_user_password
+
+  wordpress:
+    image: wordpress
+    build:  ./requirements/wordpress
+    container_name: wordpress
+    env_file:
+      - .env
+    volumes:
+      - wordpress_data:/var/www/wordpress
+    networks:
+      - inception
+    restart:  always
+    secrets:
+      - mariadb_user_password
+      - wp_admin_password
+      - wp_admin_mail
+      - wp_user_password
+      - wp_user_mail
+    depends_on:
+      - mariadb
+  
+#=================================
+# 2. declaration code
+#=================================
+
+secrets:
+  mariadb_root_password:
+    file: ../secrets/mariadb_root_password.txt
+  mariadb_user_password:
+    file: ../secrets/mariadb_user_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_admin_mail:
+    file: ../secrets/wp_admin_mail.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+  wp_user_mail:
+    file: ../secrets/wp_user_mail.txt
+
+
+#=================================
+# 3. volumes et network
+#=================================
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/gustgonz/data/wordpress
+
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/gustgonz/data/mariadb
+
+networks:
+  inception:
+    driver: bridge
